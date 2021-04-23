@@ -83,4 +83,4 @@ async def on_message(message):
         options = discord.Embed(title="Ur options", url="chrome://dino", description="1: die\n2: die\n3: die\n", color=discord.Color.blue())
         await message.channel.send(embed=options);
 
-client.run("ODM0NzE0ODM2MTYzNzU2MDY0.YIE6xQ.ZNllCkSIMNZsU4IXJCIcovarRLg")
+client.run("YOUR TOKEN HERE")
