@@ -4,14 +4,20 @@ import random
 import nacl
 import os
 from discord.ext import commands
+from keep_alive import keep_alive
+import asyncio
 
 #client = discord.Client()
 
 global clr
 clr = 0x525252
+global emergency
+emergency=False
+global emoji
+emoji=['🟦','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟']
 
 def err(mess):
-    errembed = discord.Embed(title="Error", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=str("Error: "+mess), color=clr)
+    errembed = discord.Embed(title="Error", description=str("Error: "+mess), color=discord.Color.red())
     return errembed
 
 bot = commands.Bot(command_prefix='%', description="This is a trash bot")
@@ -76,9 +82,9 @@ async def checksleep(ctx,*lst):
         reacted = []
         await reactmessage.add_reaction("1️⃣")
         if (len(lst)<1):
-            time.sleep(30)
+            await asyncio.sleep(30)
         else:
-            time.sleep(int(lst[0]))
+            await asyncio.sleep(int(lst[0]))
         await reactmessage.add_reaction("1️⃣")
         #delete users
         #newname = "Kicked-users-"+str(random.randint(69,69420))
@@ -106,27 +112,50 @@ async def checksleep(ctx,*lst):
 async def spam(message,*lst):
         if (len(lst)<2):
             return await message.channel.send(embed=err('not enough parameter'))
-        if (not lst[1].isnumeric()):
-            return await message.channel.send(embed=err(str(lst[1]+' is not a number.')))
+        if (not lst[-1].isnumeric()):
+            return await message.channel.send(embed=err(str(lst[-1]+' is not a number.')))
         #print(lst[1])
-        for i in range(int(lst[1])):
-            time.sleep(1)
-            await message.channel.send(lst[0])
+        prntstr=""
+        for i in range(0,len(lst)-1):
+            prntstr+=" "+lst[i]
+        for i in range(int(lst[-1])):
+            if emergency:
+                return await message.channel.send(embed=err("force stopped"))
+            await asyncio.sleep(1)
+            await message.channel.send(prntstr)
         
         
 @bot.command()
 async def pyramid(message,*lst):
     if (len(lst)<2):
         return await message.channel.send(embed=err('not enough parameter'))
-    if (not lst[1].isnumeric()):
-        return await message.channel.send(embed=err(str(lst[1]+' is not a number.')))
+    if (not lst[-1].isnumeric()):
+        return await message.channel.send(embed=err(str(lst[-1]+' is not a number.')))
     #print(lst[1])
+    prntstr=""
+    for i in range(0,len(lst)-1):
+        prntstr+=" "+lst[i]
     mes="";
-    for i in range(int(lst[1])):
-        mes=mes+lst[0]
-        time.sleep(1)
+    for i in range(int(lst[-1])):
+        if emergency:
+            return await message.channel.send(embed=err("force stopped"))
+        mes=mes+prntstr
+        await asyncio.sleep(1)
         await message.channel.send(mes)
 
+@bot.command()
+async def forcestop(message):
+    global emergency
+    emergency=True
+    enableembed = discord.Embed(title="Function disabled" , description='Stopping commands', color=discord.Color.red())
+    await message.channel.send(embed=enableembed)
+
+@bot.command()
+async def enable(message):
+    global emergency
+    emergency=False
+    enableembed = discord.Embed(title="Function enabled" , description='Enabling commands', color=discord.Color.green())
+    await message.channel.send(embed=enableembed)
 
     '''elif message.content=="!help":
         helpembed = discord.Embed(title="Commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=0x525252)
@@ -183,6 +212,9 @@ async def taco(message,*act):
         elif not act[2].isnumeric():
             return await message.send(embed=err(act[2]+" is not a number."))
         else:
+            if (int(act[1])*int(act[2])>175):
+                warnembed = discord.Embed(title="Warning",description="Board is too large and may not display correctly.", color=discord.Color.orange())
+                await message.send(embed=warnembed)
             boards[message.author] = []
             tmplst=[]
             tmpboard=[]
@@ -192,13 +224,23 @@ async def taco(message,*act):
                 tmpboard.append(tmplst)
             boards[message.author]= [[0 for i in range(int(act[2]))]for j in range(int(act[1]))]
             boardstring=""
+            if (int(act[1])<=10 and int(act[2])<=10):
+                boardstring+=emoji[0]
+            if (int(act[2])<=10):
+                for i in range(int(act[2])):
+                    boardstring+=emoji[i+1]
+                boardstring+="\n"
+            cnt=1
             for i in range(int(act[1])):
+                if (int(act[1])<=10):
+                    boardstring+=emoji[cnt]
+                    cnt+=1
                 for j in range(int(act[2])):
                     if (boards[message.author][i][j]):
-                        boardstring+=":yellow_circle:"
+                        boardstring+="🟡"
                         print("Y",end="")
                     else:
-                        boardstring+=":red_circle:"
+                        boardstring+="🔴"
                         print("N",end="")
                 boardstring+="\n"
                 print()
@@ -209,13 +251,23 @@ async def taco(message,*act):
         if (not message.author in boards.keys()):
             return await message.send(embed=err(str(message.author)+" doesnt have a tacoyaki board."))
         boardstring=""
+        if (len(boards[message.author])<=10 and len(boards[message.author][0])<=10):
+            boardstring+=emoji[0]
+        if len(boards[message.author][0])<=10:
+            for i in range(len(boards[message.author][0])):
+                boardstring+=emoji[i+1]
+            boardstring+='\n'
+        cnt=1
         for i in boards[message.author]:
+            if (len(boards[message.author])<=10):
+                boardstring+=emoji[cnt]
+                cnt+=1
             for j in i:
                 if j:
-                    boardstring+=":yellow_circle:"
+                    boardstring+="🟡"
                     #print("Y",end="")
                 else:
-                    boardstring+=":red_circle:"
+                    boardstring+="🔴"
                     #print("N",end="")
             boardstring+="\n"
             #print()
@@ -249,13 +301,23 @@ async def taco(message,*act):
         print(boards[message.author])
         boardstring="Flip "+str(flipcnt[message.author])+" :\n"
         won=True
+        if (len(boards[message.author])<=10 and len(boards[message.author][0])<=10):
+            boardstring+=emoji[0]
+        if len(boards[message.author][0])<=10:
+            for i in range(len(boards[message.author][0])):
+                boardstring+=emoji[i+1]
+            boardstring+="\n"
+        cnt=1
         for i in boards[message.author]:
+            if (len(boards[message.author])<=10):
+                boardstring+=emoji[cnt]
+                cnt+=1
             for j in i:
                 if j:
-                    boardstring+=":yellow_circle:"
+                    boardstring+="🟡"
                     #print("Y",end="")
                 else:
-                    boardstring+=":red_circle:"
+                    boardstring+="🔴"
                     #print("N",end="")
                     won=False
             boardstring+="\n"
@@ -272,15 +334,40 @@ async def taco(message,*act):
         boardstring="New random board: \n"
         for i in range(len(boards[message.author])):
             for j in range(len(boards[message.author][0])):
-                boards[message.author][i][j]=random.randint(0, 1)
-                if boards[message.author][i][j]:
-                    boardstring+=":yellow_circle:"
+                boards[message.author][i][j]=1
+        for i in range(len(boards[message.author])*len(boards[message.author][0])):
+            tmpx=random.randint(0,len(boards[message.author])-1)
+            tmpy=random.randint(0,len(boards[message.author][0])-1)
+            boards[message.author][tmpx][tmpy]^=1
+            if (tmpx>=1):
+                boards[message.author][tmpx-1][tmpy]^=1
+            if (tmpx<len(boards[message.author])-1):
+                boards[message.author][tmpx+1][tmpy]^=1
+            if (tmpy>=1):
+                boards[message.author][tmpx][tmpy-1]^=1
+            if (tmpy<len(boards[message.author][0])-1):
+                boards[message.author][tmpx][tmpy+1]^=1
+            print(tmpx,tmpy)
+        if (len(boards[message.author])<=10 and len(boards[message.author][0])<=10):
+            boardstring+=emoji[0]
+        if len(boards[message.author][0])<=10:
+            for i in range(len(boards[message.author][0])):
+                boardstring+=emoji[i+1]
+            boardstring+='\n'
+        cnt=1
+        for i in boards[message.author]:
+            if (len(boards[message.author])<=10):
+                boardstring+=emoji[cnt]
+                cnt+=1
+            for j in i:
+                if j:
+                    boardstring+="🟡"
                     #print("Y",end="")
                 else:
-                    boardstring+=":red_circle:"
+                    boardstring+="🔴"
                     #print("N",end="")
             boardstring+="\n"
-        boardstring+="Please note that this might be unsolvable."
+        #boardstring+="Please note that this might be unsolvable."
         boardembed = discord.Embed(title=str(str(message.author)+"'s tacoyaki board"), url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=boardstring, color=clr)
         await message.send(embed=boardembed)
 
@@ -377,6 +464,32 @@ async def calc(message,ipt):
             stk2.append(i)
     resembed = discord.Embed(title="Calculate result", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=ipt+" = "+str(stk2.pop()), color=clr)
     await message.send(embed=resembed)
+
+def recur(chn,cnum):
+    chn.send("-> "+str(cnum))
+    if cnum==1:
+        return
+    if cnum%2 ==0:
+        recur(chn,cnum/2)
+    else:
+        recur(chn,cnum*3+1)
+
+@bot.command()
+async def tnpo(message,num):
+    if not num.isnumeric():
+        return await message.send(embed=err(num+" is not a number."))
+    cnum=int(num)
+    await message.send("-> "+num)
+    while(cnum!=1):
+        await asyncio.sleep(1)
+        if emergency:
+            return await message.channel.send(embed=err("force stopped"))
+        if (cnum%2)==1:
+            cnum=cnum*3+1
+        else:
+            cnum=cnum//2
+        await message.send("-> "+str(cnum))
+    #recur(message.channel,int(num))
         
 @bot.command()
 async def help(message,*content):
@@ -393,23 +506,28 @@ async def help(message,*content):
         helpembed.add_field(name="%pyramid", value="```usage: %pyramid {content} {size}\nfunction: send {content} as a pyramid of size {size}```", inline=False)
     elif content[0]=="vc":
         helpembed = discord.Embed(title="Voice channel commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=clr)
-        helpembed.add_field(name="!join", value="```usage: !join\nfunction: joins the message user's channel```", inline=False)
-        helpembed.add_field(name="!dc", value="```usage: !dc\nfunction: bot will leave its channel```", inline=False)
-        helpembed.add_field(name="!checksleep", value="```usage: !checksleep [time]\nfunction: bot kick inactive users from channel after [time] seconds (30 by default)```", inline=False)
+        helpembed.add_field(name="%join", value="```usage: %join\nfunction: joins the message user's channel```", inline=False)
+        helpembed.add_field(name="%dc", value="```usage: %dc\nfunction: bot will leave its channel```", inline=False)
+        helpembed.add_field(name="%checksleep", value="```usage: %checksleep [time]\nfunction: bot kick inactive users from channel after [time] seconds (30 by default)```", inline=False)
     elif content[0]=="util":
         helpembed = discord.Embed(title="Utility commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=clr)
         helpembed.add_field(name="%pingme", value="```usage: %pingme\nfunction: ping user once```", inline=False)
+        helpembed.add_field(name="%forcestop", value="```usage: %forcestop\nfunction: stops all running functions```", inline=False)
+        helpembed.add_field(name="%enable", value="```usage: %enable\nfunction: able to use all functions again```", inline=False)
     elif content[0]=="math":
         helpembed = discord.Embed(title="Math commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=clr)
-        helpembed.add_field(name="%slowpower", value="```usage: %slowpower {base} {power}\nfunction: calculate {base}^{power}\nIMPORTANT: outdated use %calc instead```", inline=False)
-        helpembed.add_field(name="%calc", value="```usage: %calc {expression}\nfunction: calculate {expression}\nIMPORTANT: float in input not supported```", inline=False)
+        helpembed.add_field(name="%calc", value="```usage: %calc {expression}\nfunction: calculate {expression}\nIMPORTANT: float and non positive numbers not supported```", inline=False)
+        helpembed.add_field(name="%tnpo", value="```usage: %tnpo {value}\nfunction: 3n+1 problem starting at {value}```", inline=False)
     elif content[0]=="taco":
         helpembed = discord.Embed(title="Tacoyaki commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=clr)
         helpembed.add_field(name="%taco build", value="```usage: %taco build {row} {column}\nfunction: build a board with size {row}*{column}\nIMPORTANT: use build command before using other tacoyaki commands```", inline=False)
         helpembed.add_field(name="%taco print", value="```usage: %taco print\nfunction: print user's current tacoyaki board```", inline=False)
         helpembed.add_field(name="%taco flip", value="```usage: %taco flip {row} {column}\nfunction: flip the cell {row},{column} and its adjacent cells```", inline=False)
-        helpembed.add_field(name="%taco random", value="```usage: %taco random\nfunction: randomize a new board\nIMPORTANT: board might be unsolvable currently```", inline=False)
+        helpembed.add_field(name="%taco random", value="```usage: %taco random\nfunction: randomize a new board```", inline=False)
+    else:
+        return await message.channel.send(embed=err("invalid category"))
     await message.channel.send(embed=helpembed)
     
+keep_alive()
 
-bot.run("YOUR TOKEN HERE")
+bot.run("ODM0NzE0ODM2MTYzNzU2MDY0.YIE6xQ.zJ_qfiAt6oDFNO_6MvIWEd73uPY")
