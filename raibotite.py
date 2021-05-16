@@ -529,5 +529,5 @@ async def help(message,*content):
     await message.channel.send(embed=helpembed)
     
 keep_alive()
-
-bot.run("ODM0NzE0ODM2MTYzNzU2MDY0.YIE6xQ.zJ_qfiAt6oDFNO_6MvIWEd73uPY")
+TOKEN = os.environ.get("DISCORD_BOT_SECRET")
+bot.run(TOKEN)
