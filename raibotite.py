@@ -157,6 +157,17 @@ async def enable(message):
     enableembed = discord.Embed(title="Function enabled" , description='Enabling commands', color=discord.Color.green())
     await message.channel.send(embed=enableembed)
 
+@bot.command()
+async def ping(message):
+    pingembed = discord.Embed(title="Ping test" , description=str('Ping: '+str(bot.latency*1000)+' ms'), color=discord.Color.green())
+    await message.channel.send(embed=pingembed)
+
+@bot.command()
+async def pingwars(message):
+    pingembed = discord.Embed(title="Ping wars" , description=str('Ping: '+str(bot.latency*1000)+' ms'), color=discord.Color.green())
+    await message.channel.send(embed=pingembed)
+    await message.channel.send("$ping")
+
     '''elif message.content=="!help":
         helpembed = discord.Embed(title="Commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=0x525252)
         helpembed.add_field(name="!join", value="```usage: !join\nfunction: joins the message user's channel```", inline=False)
@@ -511,9 +522,11 @@ async def help(message,*content):
         helpembed.add_field(name="%checksleep", value="```usage: %checksleep [time]\nfunction: bot kick inactive users from channel after [time] seconds (30 by default)```", inline=False)
     elif content[0]=="util":
         helpembed = discord.Embed(title="Utility commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=clr)
+        helpembed.add_field(name="%wave", value="```usage: %wave\nfunction: say hi to the bot!```", inline=False)
         helpembed.add_field(name="%pingme", value="```usage: %pingme\nfunction: ping user once```", inline=False)
         helpembed.add_field(name="%forcestop", value="```usage: %forcestop\nfunction: stops all running functions```", inline=False)
         helpembed.add_field(name="%enable", value="```usage: %enable\nfunction: able to use all functions again```", inline=False)
+        helpembed.add_field(name="%ping", value="```usage: %ping\nfunction: check bot latency```", inline=False)
     elif content[0]=="math":
         helpembed = discord.Embed(title="Math commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=clr)
         helpembed.add_field(name="%calc", value="```usage: %calc {expression}\nfunction: calculate {expression}\nIMPORTANT: float and non positive numbers not supported```", inline=False)
@@ -527,7 +540,65 @@ async def help(message,*content):
     else:
         return await message.channel.send(embed=err("invalid category"))
     await message.channel.send(embed=helpembed)
+
+@bot.event
+async def on_command_error(error, ctx):
+    #print(str(error),str(ctx))
+    if isinstance(ctx, commands.CommandNotFound):
+        await error.message.channel.send(embed=err("command not found. use %help"))
+    else:
+        await error.message.channel.send(embed=err(str(ctx)))
+        #raise error
     
+@bot.event
+async def on_message(message):
+    #print(message.author.id)
+    mention = f'<@!{bot.user.id}>'
+    if message.author.id == bot.user.id:
+        return
+    if mention in message.content:
+        raigonite = await message.guild.fetch_member(640864059763326976)
+        pingembed = discord.Embed(title="Dont ping me" , description='Ping {} instead.'.format(raigonite.mention), color=discord.Color.orange())
+        await message.channel.send(embed=pingembed)
+    await bot.process_commands(message)
+
 keep_alive()
 TOKEN = os.environ.get("DISCORD_BOT_SECRET")
 bot.run(TOKEN)
+
+'''UPDATE LOG
+1.0 release
+New commands:
+!join !dc !checksleep !hi
+
+1.1 update
+New commands:
+!spam !pyramid !help
+Improved commands:
+!checksleep can now specify length
+
+1.2 update
+New commands:
+%wave %pingme %calc %taco(multiple commands)
+Improved commands:
+%help now seperated according to category
+Changed prefix to %
+
+1.2.1 update
+New commands:
+%forcestop %enable %tnpo
+Improved commands:
+%taco now prints row and column number
+
+1.2.1.1 bug fix
+Fixed leaked bot TOKEN
+
+1.2.2 update
+New commands:
+%ping
+Improved commands:
+%help util now shows %wave
+unknown command now shows %help error message
+redirects bot ping to @raigonite
+---github version split---
+'''
