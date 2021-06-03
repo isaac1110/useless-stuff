@@ -11,16 +11,32 @@ import asyncio
 
 global clr
 clr = 0x525252
+global rainbow
+rainbow=[15474944,16751617,16706817,36659,92671,8987285]
 global emergency
 emergency=False
 global emoji
 emoji=['🟦','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟']
+global content
+content=["ion name",'ion formula (without charges/"ion")',"charges","colour"]
+global ionlst
+# [name,formula(without charges/"ion"),charges,colour] USE SOURCE CODE GENERATOR
+ionlst=[["sodium","Na","1+","colourless"],["potassium","K","1+","colourless"],["copper(I)","Cu","1+","colourless"],["silver","Ag","1+","colourless"],["mercury(I)","Hg","1+","colourless"],["hydrogen","H","1+","colourless"],["ammonium","NH4","1+","colourless"],["magnesium","Mg","2+","colourless"],["calcium","Ca","2+","colourless"],["barium","Ba","2+","colourless"],["lead(II)","Pb","2+","colourless"],["iron(II)","Fe","2+","pale green"],["cobalt(II)","Co","2+","pink"],["nickel(II)","Ni","2+","green"],["manganese(II)","Mn","2+","very pale pink"],["copper(II)","Cu","2+","copperII"],["zinc","Zn","2+","colourless"],["mercury(II)","Hg","2+","colourless"],["aluminium","Al","3+","colourless"],["iron(III)","Fe","3+","ironIII"],["chromium(III)","Cr","3+","green"],["hydride","H","1-","colourless"],["chloride","Cl","1-","colourless"],["bromide","Br","1-","colourless"],["iodide","I","1-","colourless"],["hydroxide","OH","1-","colourless"],["nitrate","NO3","1-","colourless"],["nitrite","NO2","1-","colourless"],["hydrogencarbonate","HCO3","1-","colourless"],["hydrogensulphate","HSO4","1-","colourless"],["cyanide","CN","1-","colourless"],["permanganate","MnO4","1-","purple"],["chlorate","ClO3","1-","colourless"],["hypochlorite","ClO","1-","colourless"],["oxide","O","2-","colourless"],["sulphide","S","2-","colourless"],["sulphate","SO4","2-","colourless"],["sulphite","SO3","2-","colourless"],["silicate","SiO3","2-","colourless"],["carbonate","CO3","2-","colourless"],["chromate","CrO4","2-","yellow"],["dichromate","Cr2O7","2-","orange"],["nitride","N","3-","colourless"],["phosphide","P","3-","colourless"],["phosphate","PO4","3-","colourless"]]
 
 def err(mess):
     errembed = discord.Embed(title="Error", description=str("Error: "+mess), color=discord.Color.red())
     return errembed
 
-bot = commands.Bot(command_prefix='%', description="This is a trash bot")
+def prntion(ion):
+    if ion[0]=="copper(II)":
+        ionembed=discord.Embed(title="copper(II) ion",description="Formula:```Cu```\nCharge:```2+```\nColour:```blue or green```",colour=clr)
+    elif ion[0]=="iron(III)":
+        ionembed=discord.Embed(title="iron(III) ion",description="Formula:```Fe```\nCharge:```3+```\nColour:```yellow or brown```",colour=clr)
+    else:
+        ionembed=discord.Embed(title=ion[0]+" ion",description=f"Formula:```{ion[1]}```\nCharge:```{ion[2]}```\nColour:```{ion[3]}```",colour=clr)
+    return ionembed
+
+bot = commands.Bot(command_prefix='%', description="This is a trash bot",status=discord.Status.online, activity=discord.Game("with bugs!"))
 bot.remove_command('help')
 
 @bot.command()
@@ -211,21 +227,24 @@ boards={}
 global flipcnt
 flipcnt={}
 
-@bot.command()
-async def taco(message,*act):
+async def tacogame(isemoji,message,*act):
+    #print(message,act)
+    #await message.send(embed=err("testing"))
+    if (isemoji):
+        act=act[0]
     if (len(act)<1):
-        return await message.send(embed=err("not enough parameters."))
+        return await message.channel.send(embed=err("not enough parameters."))
     elif act[0]=="build":
         if (len(act)<3):
-            return await message.send(embed=err("not enough parameters."))
+            return await message.channel.send(embed=err("not enough parameters."))
         elif not act[1].isnumeric():
-            return await message.send(embed=err(act[1]+" is not a number."))
+            return await message.channel.send(embed=err(act[1]+" is not a number."))
         elif not act[2].isnumeric():
-            return await message.send(embed=err(act[2]+" is not a number."))
+            return await message.channel.send(embed=err(act[2]+" is not a number."))
         else:
             if (int(act[1])*int(act[2])>175):
                 warnembed = discord.Embed(title="Warning",description="Board is too large and may not display correctly.", color=discord.Color.orange())
-                await message.send(embed=warnembed)
+                await message.channel.send(embed=warnembed)
             boards[message.author] = []
             tmplst=[]
             tmpboard=[]
@@ -256,11 +275,11 @@ async def taco(message,*act):
                 boardstring+="\n"
                 print()
             boardembed = discord.Embed(title=str(str(message.author)+"'s tacoyaki board"), url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=boardstring, color=clr)
-            await message.send(embed=boardembed)
+            await message.channel.send(embed=boardembed)
             flipcnt[message.author]=0
     elif act[0]=="print":
         if (not message.author in boards.keys()):
-            return await message.send(embed=err(str(message.author)+" doesnt have a tacoyaki board."))
+            return await message.channel.send(embed=err(str(message.author)+" doesnt have a tacoyaki board."))
         boardstring=""
         if (len(boards[message.author])<=10 and len(boards[message.author][0])<=10):
             boardstring+=emoji[0]
@@ -283,22 +302,22 @@ async def taco(message,*act):
             boardstring+="\n"
             #print()
         boardembed = discord.Embed(title=str(str(message.author)+"'s tacoyaki board"), url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=boardstring, color=clr)
-        await message.send(embed=boardembed)
+        await message.channel.send(embed=boardembed)
     elif act[0]=="flip":
         if len(act)<3:
-            return await message.send(embed=err("not enough parameters."))
+            return await message.channel.send(embed=err("not enough parameters."))
         elif not act[1].isnumeric():
-            return await message.send(embed=err(act[1]+" is not a number."))
+            return await message.channel.send(embed=err(act[1]+" is not a number."))
         elif not act[2].isnumeric():
-            return await message.send(embed=err(act[2]+" is not a number."))
+            return await message.channel.send(embed=err(act[2]+" is not a number."))
         elif (not message.author in boards.keys()):
-            return await message.send(embed=err(str(message.author)+" doesnt have a tacoyaki board."))
+            return await message.channel.send(embed=err(str(message.author)+"doesnt have a tacoyaki board."))
         elif int(act[1])>len(boards[message.author]):
-            return await message.send(embed=err("invalid coordinates."))
+            return await message.channel.send(embed=err("invalid coordinates."))
         elif int(act[2])>len(boards[message.author][0]):
-            return await message.send(embed=err("invalid coordinates."))
+            return await message.channel.send(embed=err("invalid coordinates."))
         elif int(act[1])*int(act[2])==0:
-            return await message.send(embed=err("invalid coordinates."))
+            return await message.channel.send(embed=err("invalid coordinates."))
         boards[message.author][int(act[1])-1][int(act[2])-1]=not boards[message.author][int(act[1])-1][int(act[2])-1]
         if (int(act[1])>1):
             boards[message.author][int(act[1])-1-1][int(act[2])-1]=not boards[message.author][int(act[1])-1-1][int(act[2])-1]
@@ -334,13 +353,13 @@ async def taco(message,*act):
             boardstring+="\n"
             #print()
         boardembed = discord.Embed(title=str(str(message.author)+"'s tacoyaki board"), url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=boardstring, color=clr)
-        await message.send(embed=boardembed)
+        await message.channel.send(embed=boardembed)
         if won:
             winembed = discord.Embed(title=str(str(message.author)+" won the game!"), url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description="Flips: "+str(flipcnt[message.author])+"\n```%taco random``` to try again!", color=clr)
-            await message.send(embed=winembed)
+            await message.channel.send(embed=winembed)
     elif act[0]=="random":
         if (not message.author in boards.keys()):
-            return await message.send(embed=err(str(message.author)+" doesnt have a tacoyaki board."))
+            return await message.channel.send(embed=err(str(message.author)+"doesnt have a tacoyaki board."))
         flipcnt[message.author]=0
         boardstring="New random board: \n"
         for i in range(len(boards[message.author])):
@@ -358,7 +377,7 @@ async def taco(message,*act):
                 boards[message.author][tmpx][tmpy-1]^=1
             if (tmpy<len(boards[message.author][0])-1):
                 boards[message.author][tmpx][tmpy+1]^=1
-            print(tmpx,tmpy)
+            #print(tmpx,tmpy)
         if (len(boards[message.author])<=10 and len(boards[message.author][0])<=10):
             boardstring+=emoji[0]
         if len(boards[message.author][0])<=10:
@@ -380,7 +399,14 @@ async def taco(message,*act):
             boardstring+="\n"
         #boardstring+="Please note that this might be unsolvable."
         boardembed = discord.Embed(title=str(str(message.author)+"'s tacoyaki board"), url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=boardstring, color=clr)
-        await message.send(embed=boardembed)
+        await message.channel.send(embed=boardembed)
+    else:
+        return await message.channel.send(embed=err("invalid command."))
+
+
+@bot.command()
+async def taco(message,*act):
+    await tacogame(False,message,*act)
 
 @bot.command()
 async def calc(message,ipt):
@@ -503,6 +529,120 @@ async def tnpo(message,num):
     #recur(message.channel,int(num))
         
 @bot.command()
+async def status(message,*content):
+    if message.author.id!=640864059763326976:
+        return await message.channel.send(embed=err("you're not the bot's creator."))
+    elif len(content)<1:
+        return await message.channel.send(embed=err("not enough parameters."))
+    if content[0]=="listening":
+        game = discord.Activity(type=discord.ActivityType.listening, name=' '.join(content[1:]))
+        resembed = discord.Embed(title="Changed status", description="Changed status to listening "+' '.join(content[1:]), color=clr)
+    elif content[0]=="watching":
+        game = discord.Activity(type=discord.ActivityType.watching, name=' '.join(content[1:]))
+        resembed = discord.Embed(title="Changed status", description="Changed status to watching "+' '.join(content[1:]), color=clr)
+    elif content[0]=="playing":
+        game = discord.game(name=' '.join(content[1:]))
+        resembed = discord.Embed(title="Changed status", description="Changed status to playing "+' '.join(content[1:]), color=clr)
+    else:
+        game = discord.Game(' '.join(content))
+        resembed = discord.Embed(title="Changed status", description="Changed status to playing "+' '.join(content), color=clr)
+    await bot.change_presence(status=discord.Status.online, activity=game)
+    await message.send(embed=resembed)
+
+global ans
+ans={}
+
+@bot.command()
+async def ions(message,*arg):
+    #print(arg)
+    if (len(arg)<1):
+        return await message.channel.send(embed=err("not enough parameters."))
+    elif arg[0]=="random":
+        randion=random.choice(ionlst)
+        #randion=ions[1]
+        await message.channel.send(embed=prntion(randion))
+    elif arg[0]=="show":
+        if len(arg)<2:
+            return await message.channel.send(embed=err("not enough parameters."))
+        if (arg[1]=="answer"):
+            if (not message.author in ans.keys()):
+                return await message.channel.send(embed=err(str(message.author)+"doesnt have a ongoing quiz."))
+            opt=""
+            for i in ans[message.author]:
+                opt+=" "
+                opt+=i
+            ionembed = discord.Embed(title="Quiz answer(s)", description="Answer(s): "+' '.join(ans[message.author]), color=clr)
+            return await message.channel.send(embed=ionembed)
+        corr=False
+        for ion in ionlst:
+            if (ion[0].lower()==arg[1].lower() or ion[1].lower()==arg[1].lower()):
+                corr=True
+                await message.channel.send(embed=prntion(ion))
+        if (corr==False):
+            return await message.channel.send(embed=err("unknown ion."))
+    elif arg[0]=="quiz":
+        if len(arg)<2:
+            given=random.randint(0,1)
+        elif arg[1]=="name":
+            given=0
+        elif arg[1]=="formula":
+            given=1
+        else:
+            given=random.randint(0,1)
+        if len(arg)<3:
+            anstype=random.randint(0,3)
+            while(anstype==given):
+                anstype=random.randint(0,3)
+        elif arg[2]=="name":
+            anstype=0
+        elif arg[2]=="formula":
+            anstype=1
+        elif arg[2]=="charge":
+            anstype=2
+        elif arg[2]=="colour":
+            anstype=3
+        else:
+            anstype=random.randint(0,3)
+            while(anstype==given):
+                anstype=random.randint(0,3)
+        if given==anstype:
+            return await message.channel.send(embed=err("bruh dont expect i will give u ans."))
+        randion=random.choice(ionlst)
+        #print(randion)
+        ans[message.author]=[]
+        for ion in ionlst:
+            if (randion[given]==ion[given]):
+                if ion[anstype]=="copperII":
+                    ans[message.author].append("blue")
+                    ans[message.author].append("green")
+                elif ion[anstype]=="ironIII":
+                    ans[message.author].append("yellow")
+                    ans[message.author].append("brown")
+                else:
+                    ans[message.author].append(ion[anstype].lower())
+        print(ans[message.author])
+        ionembed=discord.Embed(title="Ions quiz for "+str(message.author), description='What is the '+content[anstype]+" of "+randion[given]+" ion?\n use ```%ions answer {your answer}``` to answer.", color=clr)
+        await message.channel.send(embed=ionembed)
+    elif arg[0]=="answer":
+        if (not message.author in ans.keys()):
+            return await message.channel.send(embed=err(str(message.author)+"doesnt have a ongoing quiz."))
+        if len(arg)<2:
+            return await message.channel.send(embed=err("please use ```%ion answer {your answer}```"))
+        yrans=" ".join(arg[1:])
+        if yrans.lower() in ans[message.author]:
+            winembed = discord.Embed(title=str(str(message.author)+" answered the quiz correctly!"), description="```use %ions quiz``` to try again!", color=clr)
+            await message.channel.send(embed=winembed)
+            ans.pop(message.author,None)
+        else:
+            await message.channel.send("Wrong :( Try again")
+    elif arg[0]=="reset":
+        if (not message.author in ans.keys()):
+            return await message.channel.send(embed=err(str(message.author)+"doesnt have a ongoing quiz."))
+        ans.pop(message.author,None)
+    else:
+        return await message.channel.send(embed=err("invalid command."))
+
+@bot.command()
 async def help(message,*content):
     if len(content)<1:
         helpembed = discord.Embed(title="Commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=clr)
@@ -511,6 +651,7 @@ async def help(message,*content):
         helpembed.add_field(name="%help util", value="```Show utility commands (eg.testing)```", inline=False)
         helpembed.add_field(name="%help math", value="```Show math commands```", inline=False)
         helpembed.add_field(name="%help taco", value="```Show tacoyaki game commands```", inline=False)
+        helpembed.add_field(name="%help chem", value="```Show chemistry commands```", inline=False)
     elif content[0]=="enumeration":
         helpembed = discord.Embed(title="Enumeration commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=clr)
         helpembed.add_field(name="%spam", value="```usage: %spam {content} {count}\nfunction: send {content} {count} times```", inline=False)
@@ -531,12 +672,19 @@ async def help(message,*content):
         helpembed = discord.Embed(title="Math commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=clr)
         helpembed.add_field(name="%calc", value="```usage: %calc {expression}\nfunction: calculate {expression}\nIMPORTANT: float and non positive numbers not supported```", inline=False)
         helpembed.add_field(name="%tnpo", value="```usage: %tnpo {value}\nfunction: 3n+1 problem starting at {value}```", inline=False)
-    elif content[0]=="taco":
+    elif content[0]=="taco" or content[0]=="🌮":
         helpembed = discord.Embed(title="Tacoyaki commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=clr)
         helpembed.add_field(name="%taco build", value="```usage: %taco build {row} {column}\nfunction: build a board with size {row}*{column}\nIMPORTANT: use build command before using other tacoyaki commands```", inline=False)
         helpembed.add_field(name="%taco print", value="```usage: %taco print\nfunction: print user's current tacoyaki board```", inline=False)
         helpembed.add_field(name="%taco flip", value="```usage: %taco flip {row} {column}\nfunction: flip the cell {row},{column} and its adjacent cells```", inline=False)
         helpembed.add_field(name="%taco random", value="```usage: %taco random\nfunction: randomize a new board```", inline=False)
+    elif content[0]=="chem":
+        helpembed = discord.Embed(title="Chemistry commands help",  description='Raibotite commands help', color=clr)
+        helpembed.add_field(name="%ions random", value="```usage: %ions random\nfunction: prints a random ion```", inline=False)
+        helpembed.add_field(name="%ions show", value='```usage: %ions show {ion name|ion formula|"answer"}\nfunction: shows information of ion/show quiz answer\nexamples: %ions show iron(II)\n%ions show Cr2O7```', inline=False)
+        helpembed.add_field(name="%ions quiz", value='```usage: %ions quiz [given type] [answer type]\nfunction: generates a random quiz\n[given type] can be name,formula or random (default by random)\n[answer type] can be name,formula,charge,colour or random (default by random)```', inline=False)
+        helpembed.add_field(name="%ions answer", value="```usage: %ions answer {answer}\nfunction: answer the generated quiz```", inline=False)
+        helpembed.add_field(name="%ions reset", value="```usage: %ions reset\nfunction: reset quiz```", inline=False)
     else:
         return await message.channel.send(embed=err("invalid category"))
     await message.channel.send(embed=helpembed)
@@ -560,6 +708,18 @@ async def on_message(message):
         raigonite = await message.guild.fetch_member(640864059763326976)
         pingembed = discord.Embed(title="Dont ping me" , description='Ping {} instead.'.format(raigonite.mention), color=discord.Color.orange())
         await message.channel.send(embed=pingembed)
+        await message.channel.send('{} wake up'.format(raigonite.mention))
+    lst=message.content.split()
+    #print(lst[0])
+    global clr
+    #clr=random.choice(rainbow)
+    clr=random.randint(0,256**3)
+    #print(clr)
+    if (len(lst)<1):
+        return
+    if (lst[0]=="%🌮"):
+        await tacogame(True,message,lst[1:])
+        return
     await bot.process_commands(message)
 
 keep_alive()
@@ -600,5 +760,28 @@ Improved commands:
 %help util now shows %wave
 unknown command now shows %help error message
 redirects bot ping to @raigonite
+
+1.2.3 update:
+Improved commands:
+%taco supports taco emoji
+%help supports taco emoji
+now shows status
+
+1.2.3.1 qol update:
+Improved commands:
+bot owner can change status
+changed status included watching and listening
+moved change status code out of on_ready
+ping owner actually works
+
+1.2.4 pride month update
+Improved commands:
+embed now have random colour
+taco wrong commands shows invalid command error
+fixed taco random not choosing border to flip
+
+1.3 chemistry UPDATE
+New commands:
+%ions(multiple commands)
 ---github version split---
 '''
