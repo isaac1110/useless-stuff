@@ -6,6 +6,7 @@ import os
 from discord.ext import commands
 from keep_alive import keep_alive
 import asyncio
+import math
 
 #client = discord.Client()
 
@@ -14,20 +15,25 @@ clr = 0x525252
 global rainbow
 rainbow=[15474944,16751617,16706817,36659,92671,8987285]
 global emergency
-emergency=False
+emergency={}
 global emoji
 emoji=['🟦','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟']
 global content
 content=["ion name",'ion formula (without charges/"ion")',"charges","colour"]
 global ionlst
 # [name,formula(without charges/"ion"),charges,colour] USE SOURCE CODE GENERATOR
-ionlst=[["sodium","Na","1+","colourless"],["potassium","K","1+","colourless"],["copper(I)","Cu","1+","colourless"],["silver","Ag","1+","colourless"],["mercury(I)","Hg","1+","colourless"],["hydrogen","H","1+","colourless"],["ammonium","NH4","1+","colourless"],["magnesium","Mg","2+","colourless"],["calcium","Ca","2+","colourless"],["barium","Ba","2+","colourless"],["lead(II)","Pb","2+","colourless"],["iron(II)","Fe","2+","pale green"],["cobalt(II)","Co","2+","pink"],["nickel(II)","Ni","2+","green"],["manganese(II)","Mn","2+","very pale pink"],["copper(II)","Cu","2+","copperII"],["zinc","Zn","2+","colourless"],["mercury(II)","Hg","2+","colourless"],["aluminium","Al","3+","colourless"],["iron(III)","Fe","3+","ironIII"],["chromium(III)","Cr","3+","green"],["hydride","H","1-","colourless"],["chloride","Cl","1-","colourless"],["bromide","Br","1-","colourless"],["iodide","I","1-","colourless"],["hydroxide","OH","1-","colourless"],["nitrate","NO3","1-","colourless"],["nitrite","NO2","1-","colourless"],["hydrogencarbonate","HCO3","1-","colourless"],["hydrogensulphate","HSO4","1-","colourless"],["cyanide","CN","1-","colourless"],["permanganate","MnO4","1-","purple"],["chlorate","ClO3","1-","colourless"],["hypochlorite","ClO","1-","colourless"],["oxide","O","2-","colourless"],["sulphide","S","2-","colourless"],["sulphate","SO4","2-","colourless"],["sulphite","SO3","2-","colourless"],["silicate","SiO3","2-","colourless"],["carbonate","CO3","2-","colourless"],["chromate","CrO4","2-","yellow"],["dichromate","Cr2O7","2-","orange"],["nitride","N","3-","colourless"],["phosphide","P","3-","colourless"],["phosphate","PO4","3-","colourless"]]
+ionlst=[["sodium","Na","1+","colourless"],["potassium","K","1+","colourless"],["copper(I)","Cu","1+","colourless"],["silver","Ag","1+","colourless"],["mercury(I)","Hg","1+","colourless"],["hydrogen","H","1+","colourless"],["ammonium","NH4","1+","colourless"],["magnesium","Mg","2+","colourless"],["calcium","Ca","2+","colourless"],["barium","Ba","2+","colourless"],["lead(II)","Pb","2+","colourless"],["iron(II)","Fe","2+","pale green",9620397],["cobalt(II)","Co","2+","pink",16208197],["nickel(II)","Ni","2+","green",4107149],["manganese(II)","Mn","2+","very pale pink",15381459],["copper(II)","Cu","2+","copperII",40930],["zinc","Zn","2+","colourless"],["mercury(II)","Hg","2+","colourless"],["aluminium","Al","3+","colourless"],["iron(III)","Fe","3+","ironIII",16630795],["chromium(III)","Cr","3+","green",4160817],["hydride","H","1-","colourless"],["chloride","Cl","1-","colourless"],["bromide","Br","1-","colourless"],["iodide","I","1-","colourless"],["hydroxide","OH","1-","colourless"],["nitrate","NO3","1-","colourless"],["nitrite","NO2","1-","colourless"],["hydrogencarbonate","HCO3","1-","colourless"],["hydrogensulphate","HSO4","1-","colourless"],["cyanide","CN","1-","colourless"],["permanganate","MnO4","1-","purple",16711848],["chlorate","ClO3","1-","colourless"],["hypochlorite","ClO","1-","colourless"],["oxide","O","2-","colourless"],["sulphide","S","2-","colourless"],["sulphate","SO4","2-","colourless"],["sulphite","SO3","2-","colourless"],["silicate","SiO3","2-","colourless"],["carbonate","CO3","2-","colourless"],["chromate","CrO4","2-","yellow",16630795],["dichromate","Cr2O7","2-","orange",16029465],["nitride","N","3-","colourless"],["phosphide","P","3-","colourless"],["phosphate","PO4","3-","colourless"]]
 
 def err(mess):
     errembed = discord.Embed(title="Error", description=str("Error: "+mess), color=discord.Color.red())
     return errembed
 
 def prntion(ion):
+    global clr
+    if len(ion)>4:
+        clr=ion[4]
+    else:
+        clr=0x525252
     if ion[0]=="copper(II)":
         ionembed=discord.Embed(title="copper(II) ion",description="Formula:```Cu```\nCharge:```2+```\nColour:```blue or green```",colour=clr)
     elif ion[0]=="iron(III)":
@@ -130,15 +136,18 @@ async def spam(message,*lst):
             return await message.channel.send(embed=err('not enough parameter'))
         if (not lst[-1].isnumeric()):
             return await message.channel.send(embed=err(str(lst[-1]+' is not a number.')))
+        if (int(lst[-1]))>15:
+                warnembed = discord.Embed(title="Warning",description="%spam limited to 15 message.", color=discord.Color.orange())
+                await message.channel.send(embed=warnembed)
         #print(lst[1])
         prntstr=""
         for i in range(0,len(lst)-1):
             prntstr+=" "+lst[i]
-        for i in range(int(lst[-1])):
-            if emergency:
+        for i in range(min(int(lst[-1]),15)):
+            if emergency[message.guild.id]:
                 return await message.channel.send(embed=err("force stopped"))
-            await asyncio.sleep(1)
             await message.channel.send(prntstr)
+            await asyncio.sleep(1)
         
         
 @bot.command()
@@ -147,29 +156,34 @@ async def pyramid(message,*lst):
         return await message.channel.send(embed=err('not enough parameter'))
     if (not lst[-1].isnumeric()):
         return await message.channel.send(embed=err(str(lst[-1]+' is not a number.')))
+    if (int(lst[-1]))>15:
+            warnembed = discord.Embed(title="Warning",description="%spam limited to 15 message.", color=discord.Color.orange())
+            await message.channel.send(embed=warnembed)
     #print(lst[1])
     prntstr=""
     for i in range(0,len(lst)-1):
         prntstr+=" "+lst[i]
+    if (len(prntstr)*min(int(lst[-1]),15)>1900):
+        return await message.channel.send(embed=err("message too long"))
     mes="";
-    for i in range(int(lst[-1])):
-        if emergency:
+    for i in range(min(int(lst[-1]),15)):
+        if emergency[message.guild.id]:
             return await message.channel.send(embed=err("force stopped"))
         mes=mes+prntstr
-        await asyncio.sleep(1)
         await message.channel.send(mes)
+        await asyncio.sleep(1)
 
 @bot.command()
 async def forcestop(message):
     global emergency
-    emergency=True
+    emergency[message.guild.id]=True
     enableembed = discord.Embed(title="Function disabled" , description='Stopping commands', color=discord.Color.red())
     await message.channel.send(embed=enableembed)
 
 @bot.command()
 async def enable(message):
     global emergency
-    emergency=False
+    emergency[message.guild.id]=False
     enableembed = discord.Embed(title="Function enabled" , description='Enabling commands', color=discord.Color.green())
     await message.channel.send(embed=enableembed)
 
@@ -185,7 +199,7 @@ async def pingwars(message):
     await message.channel.send("$ping")
 
     '''elif message.content=="!help":
-        helpembed = discord.Embed(title="Commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=0x525252)
+        helpembed = discord.Embed(title="Commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='raibotite commands help', color=0x525252)
         helpembed.add_field(name="!join", value="```usage: !join\nfunction: joins the message user's channel```", inline=False)
         helpembed.add_field(name="!dc", value="```usage: !dc\nfunction: bot will leave its channel```", inline=False)
         helpembed.add_field(name="!checksleep", value="```usage: !checksleep [time]\nfunction: bot kick inactive users from channel after [time] seconds (30 by default)```", inline=False)
@@ -408,8 +422,26 @@ async def tacogame(isemoji,message,*act):
 async def taco(message,*act):
     await tacogame(False,message,*act)
 
+async def fp(bse,tme):
+    if tme==1:
+        return bse
+    nnum=await fp(bse,tme//2)
+    if not isinstance(nnum, (float, int)):
+        return nnum
+    #print(math.log10(nnum))
+    if math.log10(nnum)>2000:
+        return err("number too big, fast power force stopped")
+    #print(tme)
+    #print(nnum*nnum)
+    if (tme%2==0):
+        return nnum*nnum
+    else:
+        return nnum*nnum*bse
+
+
 @bot.command()
-async def calc(message,ipt):
+async def calc(message,*oipt):
+    ipt="".join(oipt)
     postord=[]
     stk=[]
     cnum=0
@@ -496,10 +528,23 @@ async def calc(message,ipt):
                 return await message.send(embed=err("invalid expression"))
             num1=stk2.pop()
             num2=stk2.pop()
-            stk2.append(float(num2**num1))
+            rtrn=await fp(num2,int(num1))
+            #print(rtrn)
+            if not isinstance(rtrn, (float, int)):
+                return await message.channel.send(embed=err("fast power force broken"))
+            if int(num1)>10000:
+                return await message.channel.send(embed=err("number too big"))
+            stk2.append(rtrn)
+            #stk2.append(float(num2**num1))
         else:
             stk2.append(i)
-    resembed = discord.Embed(title="Calculate result", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=ipt+" = "+str(stk2.pop()), color=clr)
+    fres=stk2.pop()
+    if math.log10(fres)<1500:
+        resembed = discord.Embed(title="Calculate result", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=ipt+" = "+str(fres), color=clr)
+    else:
+        restr=str(fres)
+        pstr=restr[0]+"."+restr[1:10]+"e+"+str(int(math.log10(fres)))
+        resembed = discord.Embed(title="Calculate result", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=ipt+" = "+pstr, color=clr)
     await message.send(embed=resembed)
 
 def recur(chn,cnum):
@@ -519,7 +564,7 @@ async def tnpo(message,num):
     await message.send("-> "+num)
     while(cnum!=1):
         await asyncio.sleep(1)
-        if emergency:
+        if emergency[message.guild.id]:
             return await message.channel.send(embed=err("force stopped"))
         if (cnum%2)==1:
             cnum=cnum*3+1
@@ -599,7 +644,7 @@ async def ions(message,*arg):
             anstype=1
         elif arg[2]=="charge":
             anstype=2
-        elif arg[2]=="colour":
+        elif arg[2]=="colour" or arg[2]=="color":
             anstype=3
         else:
             anstype=random.randint(0,3)
@@ -607,7 +652,12 @@ async def ions(message,*arg):
                 anstype=random.randint(0,3)
         if given==anstype:
             return await message.channel.send(embed=err("bruh dont expect i will give u ans."))
+        #print(len(ionlst))
         randion=random.choice(ionlst)
+        if (anstype==3 and randion[3]=="colourless"):
+            randion=random.choice(ionlst)
+        if (anstype==3 and randion[3]=="colourless"):
+            randion=random.choice(ionlst)
         #print(randion)
         ans[message.author]=[]
         for ion in ionlst:
@@ -620,6 +670,12 @@ async def ions(message,*arg):
                     ans[message.author].append("brown")
                 else:
                     ans[message.author].append(ion[anstype].lower())
+                    if (ion[anstype]=="colourless"):
+                        ans[message.author].append("colorless")
+                    elif (ion[anstype]=="1+"):
+                        ans[message.author].append("+")
+                    elif (ion[anstype]=="1-"):
+                        ans[message.author].append("-")
         print(ans[message.author])
         ionembed=discord.Embed(title="Ions quiz for "+str(message.author), description='What is the '+content[anstype]+" of "+randion[given]+" ion?\n use ```%ions answer {your answer}``` to answer.", color=clr)
         await message.channel.send(embed=ionembed)
@@ -642,6 +698,91 @@ async def ions(message,*arg):
     else:
         return await message.channel.send(embed=err("invalid command."))
 
+@bot.command()
+async def heart(message):
+    pingembed = discord.Embed(title="Get trolled lol" , description='I wont make a quiz because someone told me to do so lol (or maybe yes)', color=discord.Color.orange())
+    return await message.channel.send(embed=pingembed)
+
+#global stklvl,curr,gd
+stklvl=0
+curr=0
+gd=0
+
+@bot.command()
+async def cmd(message,*args):
+    if message.author.id!=640864059763326976:
+        return await message.channel.send(embed=err("you're not the bot's creator."))
+    global stklvl,curr,gd
+    if args[0]=="cd":
+        if args[1]=="..":
+            if stklvl==0:
+                return await message.channel.send(embed=err("Alread at root directory"))
+            elif stklvl==1:
+                #global stklvl
+                stklvl=0
+            elif stklvl==2:
+                #global stklvl,cur
+                #global stklvl
+                #global curr
+                curr=gd
+                stklvl=1
+            return
+        elif stklvl==0:
+            for guild in bot.guilds:
+                if guild.name==" ".join(args[1:]):
+                    #global gd,curr,stklvl
+                    #global stklvl
+                    #global curr
+                    #global gd
+                    stklvl=1
+                    curr=guild
+                    gd=guild
+                    #print(stklvl)
+                    #print("sucess go ",guild.name)
+                    return
+            return await message.channel.send(embed=err("Server not found"))
+        elif stklvl==1:
+            for channel in curr.text_channels:
+                if channel.name==args[1]:
+                    #global stklvl,curr
+                    #global stklvl
+                    #global curr
+                    stklvl=2
+                    curr=channel
+                    return
+            return await message.channel.send(embed=err("Channel not found"))
+        else:
+            return await message.channel.send(embed=err("Cannot go further"))
+    elif args[0]=="dir":
+        cont=""
+        if (stklvl==0):
+            for guild in bot.guilds:
+                cont=cont+str(guild)+"\n"
+        elif stklvl==1:
+            for channel in curr.text_channels:
+                cont=cont+str(channel)+"\n"
+        else:
+            cont="At leaf, no contents."
+        pingembed = discord.Embed(title="Directory contents" , description=cont, color=discord.Color.green())
+        return await message.channel.send(embed=pingembed)
+    elif args[0]=="send":
+        if stklvl==2:
+            await curr.send(" ".join(args[1:]))
+        else:
+            return await message.channel.send(embed=err("Not in channel"))
+    else:
+        return await message.channel.send(embed=err("Wrong command"))
+
+@bot.event
+async def on_message_delete(message):
+    #print("detected")
+    #print(message.content)
+    if "<@!640864059763326976>" in message.content or "<@640864059763326976>" in message.content:
+        pingembed = discord.Embed(title=f"{str(message.author)} ghost pinged Raigonite" , description=f'User {str(message.author)} deleted message "{str(message.content)}".', color=discord.Color.orange())
+        return await message.channel.send(embed=pingembed)
+    elif "<@" in message.content:
+        pingembed = discord.Embed(title=f"{str(message.author)} is sus" , description=f'User {str(message.author)} deleted message "{str(message.content)}".', color=discord.Color.orange())
+        return await message.channel.send(embed=pingembed)
 @bot.command()
 async def help(message,*content):
     if len(content)<1:
@@ -701,14 +842,32 @@ async def on_command_error(error, ctx):
 @bot.event
 async def on_message(message):
     #print(message.author.id)
+    if (not message.guild.id in emergency.keys()):
+        emergency[message.guild.id]=False
+    #print(message.channel.id)
+    global mention
     mention = f'<@!{bot.user.id}>'
     if message.author.id == bot.user.id:
         return
-    if mention in message.content:
+    '''if message.mention_everyone:
+        pingembed = discord.Embed(title="Dont ping @everyone or @here" , description='@everyone and @here is forbidden.', color=discord.Color.orange())
+        return await message.channel.send(embed=pingembed)'''
+    #print(message.content)
+    if "<@!834714836163756064>" in message.content or "<@834714836163756064>" in message.content:
+        #print(message.author)
+        global raigonite
         raigonite = await message.guild.fetch_member(640864059763326976)
         pingembed = discord.Embed(title="Dont ping me" , description='Ping {} instead.'.format(raigonite.mention), color=discord.Color.orange())
-        await message.channel.send(embed=pingembed)
-        await message.channel.send('{} wake up'.format(raigonite.mention))
+        return await message.channel.send(embed=pingembed)
+        #return await message.channel.send('{} wake up'.format(raigonite.mention))
+    if len(message.content)<1:
+        return
+    if message.channel.id==682168643596976226 and message.content[0]=="%":
+        pingembed = discord.Embed(title="Dont use raibotite here" , description='READ ANNOUNCEMENT\n> Since @raigonite ‘s @Raibotite is so useless it is now banned in #bot-commands and must be used in #spam ', color=discord.Color.orange())
+        return await message.channel.send(embed=pingembed)
+    if message.content[0]=="%" and "@" in message.content:
+        pingembed = discord.Embed(title="Commands with ping is currently disabled." , description='Your command is blocked because "@" is detected', color=discord.Color.orange())
+        return await message.channel.send(embed=pingembed)
     lst=message.content.split()
     #print(lst[0])
     global clr
@@ -783,5 +942,39 @@ fixed taco random not choosing border to flip
 1.3 chemistry UPDATE
 New commands:
 %ions(multiple commands)
+
+1.3.1 update
+Improved commands:
+quiz on colour will less likely have answer of colourless (~45% chance of colourless)
+ions with colour now have correct colour in embed
+now supports "color" "colorless" "-" and "+"
+forcestop and enable is server independent
+
+1.3.2 bug fix
+Improved commands:
+@ in message blocked
+forcestop will be slightly quicker
+spam and pyramid limited to 15 message
+
+1.3.3 small update
+Improved commands:
+ping bot now wont ping owner anymore to prevent abusing
+message that are too long using %pyramid will be blocked
+
+1.3.4 bug fix
+New commands:
+%cmd for owner
+Improved commands:
+ping detector improved
+
+1.3.4.1 bug fix
+Improved commands:
+moved power calculation to async thread and force break too large numbers
+numbers larger than 1e1500 uses scientific notation
+%calc supports space
+
+1.3.5 small update
+Improved commands:
+detects ghost ping
 ---github version split---
 '''
