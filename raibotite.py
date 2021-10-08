@@ -7,6 +7,8 @@ from discord.ext import commands
 from keep_alive import keep_alive
 import asyncio
 import math
+from fractions import Fraction
+from decimal import Decimal
 
 #client = discord.Client()
 
@@ -26,6 +28,10 @@ ionlst=[["sodium","Na","1+","colourless"],["potassium","K","1+","colourless"],["
 
 def err(mess):
     errembed = discord.Embed(title="Error", description=str("Error: "+mess), color=discord.Color.red())
+    return errembed
+
+def warn(mess):
+    errembed = discord.Embed(title="Warning", description=str("Warning: "+mess), color=discord.Color.orange())
     return errembed
 
 def prntion(ion):
@@ -136,14 +142,16 @@ async def spam(message,*lst):
             return await message.channel.send(embed=err('not enough parameter'))
         if (not lst[-1].isnumeric()):
             return await message.channel.send(embed=err(str(lst[-1]+' is not a number.')))
-        if (int(lst[-1]))>15:
+        cnt=int(lst[-1])
+        if (int(lst[-1]))>15 and message.author.id!=640864059763326976:
                 warnembed = discord.Embed(title="Warning",description="%spam limited to 15 message.", color=discord.Color.orange())
                 await message.channel.send(embed=warnembed)
+                cnt=15
         #print(lst[1])
         prntstr=""
         for i in range(0,len(lst)-1):
             prntstr+=" "+lst[i]
-        for i in range(min(int(lst[-1]),15)):
+        for i in range(cnt):
             if emergency[message.guild.id]:
                 return await message.channel.send(embed=err("force stopped"))
             await message.channel.send(prntstr)
@@ -172,6 +180,27 @@ async def pyramid(message,*lst):
         mes=mes+prntstr
         await message.channel.send(mes)
         await asyncio.sleep(1)
+
+@bot.command()
+async def countdown(message,*lst):
+        if (len(lst)<2):
+            return await message.channel.send(embed=err('not enough parameter'))
+        if (not lst[-1].isnumeric()):
+            return await message.channel.send(embed=err(str(lst[-1]+' is not a number.')))
+        cnt=int(lst[-1])
+        if (int(lst[-1]))>15 and message.author.id!=640864059763326976:
+                warnembed = discord.Embed(title="Warning",description="%spam limited to 15 message.", color=discord.Color.orange())
+                await message.channel.send(embed=warnembed)
+                cnt=15
+        #print(lst[1])
+        prntstr=""
+        for i in range(0,len(lst)-1):
+            prntstr+=" "+lst[i]
+        for i in range(cnt,0,-1):
+            if emergency[message.guild.id]:
+                return await message.channel.send(embed=err("force stopped"))
+            await message.channel.send(str(str(i)+prntstr))
+            await asyncio.sleep(1)
 
 @bot.command()
 async def forcestop(message):
@@ -256,6 +285,10 @@ async def tacogame(isemoji,message,*act):
         elif not act[2].isnumeric():
             return await message.channel.send(embed=err(act[2]+" is not a number."))
         else:
+            if (int(act[1])*int(act[2])==0):
+                return await message.channel.send(embed=err("Board is empty."))
+            if (int(act[1])*int(act[2])>3600):
+                return await message.channel.send(embed=err("Board is too large."))
             if (int(act[1])*int(act[2])>175):
                 warnembed = discord.Embed(title="Warning",description="Board is too large and may not display correctly.", color=discord.Color.orange())
                 await message.channel.send(embed=warnembed)
@@ -325,7 +358,7 @@ async def tacogame(isemoji,message,*act):
         elif not act[2].isnumeric():
             return await message.channel.send(embed=err(act[2]+" is not a number."))
         elif (not message.author in boards.keys()):
-            return await message.channel.send(embed=err(str(message.author)+"doesnt have a tacoyaki board."))
+            return await message.channel.send(embed=err(str(message.author)+" doesnt have a tacoyaki board."))
         elif int(act[1])>len(boards[message.author]):
             return await message.channel.send(embed=err("invalid coordinates."))
         elif int(act[2])>len(boards[message.author][0]):
@@ -373,7 +406,7 @@ async def tacogame(isemoji,message,*act):
             await message.channel.send(embed=winembed)
     elif act[0]=="random":
         if (not message.author in boards.keys()):
-            return await message.channel.send(embed=err(str(message.author)+"doesnt have a tacoyaki board."))
+            return await message.channel.send(embed=err(str(message.author)+" doesnt have a tacoyaki board."))
         flipcnt[message.author]=0
         boardstring="New random board: \n"
         for i in range(len(boards[message.author])):
@@ -414,6 +447,10 @@ async def tacogame(isemoji,message,*act):
         #boardstring+="Please note that this might be unsolvable."
         boardembed = discord.Embed(title=str(str(message.author)+"'s tacoyaki board"), url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=boardstring, color=clr)
         await message.channel.send(embed=boardembed)
+    elif act[0]=="clear":
+        if (not message.author in boards.keys()):
+            return await message.channel.send(embed=err(str(message.author)+" doesnt have a tacoyaki board."))
+        boards.pop(message.author,None)
     else:
         return await message.channel.send(embed=err("invalid command."))
 
@@ -445,14 +482,17 @@ async def calc(message,*oipt):
     postord=[]
     stk=[]
     cnum=0
+    isnum=False
     for i in ipt:
         if i.isnumeric():
+            isnum=True
             cnum*=10
             cnum+=int(i)
             continue
-        if cnum>0:
+        if isnum:
             postord.append(cnum)
             cnum=0
+            isnum=False
         if i=='(':
             stk.append('(')
             continue
@@ -490,7 +530,7 @@ async def calc(message,*oipt):
             stk.append(i)
         else:
             return await message.send(embed=err("invalid expression"))
-    if cnum>0:
+    if isnum:
         postord.append(cnum)
     while len(stk)>0:
         postord.append(stk.pop())
@@ -528,22 +568,36 @@ async def calc(message,*oipt):
                 return await message.send(embed=err("invalid expression"))
             num1=stk2.pop()
             num2=stk2.pop()
-            rtrn=await fp(num2,int(num1))
-            #print(rtrn)
-            if not isinstance(rtrn, (float, int)):
-                return await message.channel.send(embed=err("fast power force broken"))
-            if int(num1)>10000:
-                return await message.channel.send(embed=err("number too big"))
+            if (num1==0) and (num2==0):
+                return await message.channel.send(embed=err("i wish i know what is 0 to the power of 0"))
+            if (num1==0):
+                rtrn=1
+            elif (num2==0):
+                rtrn=0
+            else:
+                rtrn=await fp(num2,int(num1))
+                #print(rtrn)
+                if not isinstance(rtrn, (float, int)):
+                    return await message.channel.send(embed=err("fast power force broken"))
+                #if int(num1)>10000:
+                    #return await message.channel.send(embed=err("number too big"))
             stk2.append(rtrn)
             #stk2.append(float(num2**num1))
         else:
             stk2.append(i)
     fres=stk2.pop()
-    if math.log10(fres)<1500:
-        resembed = discord.Embed(title="Calculate result", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=ipt+" = "+str(fres), color=clr)
+    if (fres<0):
+        neg="-"
+        fres=-fres
+    else:
+        neg=""
+    if fres==0:
+        resembed = discord.Embed(title="Calculate result", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=ipt+" = "+neg+str(fres), color=clr)
+    elif math.log10(fres)<1500:
+        resembed = discord.Embed(title="Calculate result", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=ipt+" = "+neg+str(fres), color=clr)
     else:
         restr=str(fres)
-        pstr=restr[0]+"."+restr[1:10]+"e+"+str(int(math.log10(fres)))
+        pstr=neg+restr[0]+"."+restr[1:10]+"e+"+str(int(math.log10(fres)))
         resembed = discord.Embed(title="Calculate result", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description=ipt+" = "+pstr, color=clr)
     await message.send(embed=resembed)
 
@@ -611,7 +665,7 @@ async def ions(message,*arg):
             return await message.channel.send(embed=err("not enough parameters."))
         if (arg[1]=="answer"):
             if (not message.author in ans.keys()):
-                return await message.channel.send(embed=err(str(message.author)+"doesnt have a ongoing quiz."))
+                return await message.channel.send(embed=err(str(message.author)+" doesnt have a ongoing quiz."))
             opt=""
             for i in ans[message.author]:
                 opt+=" "
@@ -681,7 +735,7 @@ async def ions(message,*arg):
         await message.channel.send(embed=ionembed)
     elif arg[0]=="answer":
         if (not message.author in ans.keys()):
-            return await message.channel.send(embed=err(str(message.author)+"doesnt have a ongoing quiz."))
+            return await message.channel.send(embed=err(str(message.author)+" doesnt have a ongoing quiz."))
         if len(arg)<2:
             return await message.channel.send(embed=err("please use ```%ion answer {your answer}```"))
         yrans=" ".join(arg[1:])
@@ -693,10 +747,109 @@ async def ions(message,*arg):
             await message.channel.send("Wrong :( Try again")
     elif arg[0]=="reset":
         if (not message.author in ans.keys()):
-            return await message.channel.send(embed=err(str(message.author)+"doesnt have a ongoing quiz."))
+            return await message.channel.send(embed=err(str(message.author)+" doesnt have a ongoing quiz."))
         ans.pop(message.author,None)
     else:
         return await message.channel.send(embed=err("invalid command."))
+
+def isquare(num):
+    rt=math.isqrt(num)
+    return rt*rt==num
+
+@bot.command()
+async def quad(message,*args):
+    curr=Fraction(0,1)
+    a=[]
+    for i in range(3):
+        a.append(Fraction(0,1))
+    neg=1
+    lvl=0
+    cxor=False
+    cdem=False
+    ipt=(''.join(args))+'+'
+    cnum=""
+    for i in range(len(ipt)):
+        if (ipt[i]=='+'):
+            if (cnum!=""):
+                curr=Fraction(cnum)
+                cnum=""
+                a[lvl]+=curr*Fraction(neg,1)
+                curr=Fraction(0,1)
+            neg=1
+            lvl=0
+            cxor=False
+            cdem=False
+        elif (ipt[i]=='-'):
+            if (cnum!=""):
+                curr=Fraction(cnum)
+                cnum=""
+                a[lvl]+=curr*Fraction(neg,1)
+                curr=Fraction(0,1)
+            lvl=0
+            cxor=False
+            cdem=False
+            neg=-1
+        elif (ipt[i]=='^'):
+            if ((cnum=="") or (cxor)):
+                return await message.channel.send(embed=err("invalid expression."))
+            cxor=True
+        elif ((ipt[i]=='X') or (ipt[i]=='x')):
+            if (cnum==""):
+                cnum="1"
+            lvl=1
+        elif (ipt[i]=='/'):
+            cdem=True
+            cnum+='/'
+        else:
+            if (cxor):
+                if (lvl!=1):
+                    return await message.channel.send(embed=err("invalid expression."))
+                lvl=int(ipt[i])
+            else:
+                cnum+=ipt[i]
+    cont=""
+    if (math.floor(a[2])<0):
+        cont+="a: "+str(a[2])+", a < 0, i.e. open downwards\n"
+    elif (math.ceil(a[2]>0)):
+        cont+="a: "+str(a[2])+", a > 0, i.e. open upwards\n"
+    else:
+        cont+="a: 0, this is not a quardratic equation lmao\n"
+        return await message.channel.send(embed=discord.Embed(title="Hw solver (kinda)", description=cont, color=clr))
+    cont+="b: "+str(a[1])+"\n"
+    cont+="c: "+str(a[0])+", y-intercept = "+str(a[0])+"\n"
+    delta=a[1]*a[1]-(4*a[0]*a[2])
+    cont+="Δ: "+str(delta)
+    if (math.floor(delta)<0):
+        cont+=", no real roots.\nroots: no real roots, no x-intercept\n"
+    elif (math.ceil(delta)>0):
+        if not (isquare(abs(delta.numerator))and(isquare(delta.denominator))):
+            await message.channel.send(embed=warn("answer may not be rational."))
+        rtdelta=Fraction((math.sqrt(delta.numerator))/(math.sqrt(delta.denominator))).limit_denominator()
+        rt1=-(a[1])/(2*a[2])+(rtdelta/(2*a[2]))
+        rt2=-(a[1])/(2*a[2])-(rtdelta/(2*a[2]))
+        cont+=", double real roots.\nroots: "+str(min(rt1,rt2))+", "+str(max(rt1,rt2))+", x-intercept = "+str(min(rt1,rt2))+" and "+str(max(rt1,rt2))+"\n"
+    else:
+        cont+=", equal real roots.\nroot: "+str(-(a[1])/(2*a[2]))+", x-intercept = "+str(-(a[1])/(2*a[2]))+"\n"
+    h=-a[1]/(2*a[2])
+    k=-delta/(4*a[2])
+    cont+="h: "+str(h)+", vertex: ("+str(h)+","+str(k)+")\n"
+    cont+="k: "+str(k)+", vertex form: "
+    if (a[2]==Fraction(-1,1)):
+        cont+="-"
+    elif (a[2]!=Fraction(1,1)):
+        cont+=str(a[2])
+    if (math.floor(h)<0):
+        cont+="(x+"+str(-h)+")^2"
+    elif (math.ceil(h)>0):
+        cont+="(x-"+str(h)+")^2"
+    else:
+        cont+="(x-0)^2"
+    if (math.floor(k)<0):
+        cont+=str(k)
+    elif (math.ceil(k)>0):
+        cont+="+"+str(k)
+    cont+="\n"
+    await message.channel.send(embed=discord.Embed(title="Hw solver (kinda)", description=cont, color=clr))
 
 @bot.command()
 async def heart(message):
@@ -707,12 +860,14 @@ async def heart(message):
 stklvl=0
 curr=0
 gd=0
+tit=""
+contt=""
 
 @bot.command()
 async def cmd(message,*args):
     if message.author.id!=640864059763326976:
         return await message.channel.send(embed=err("you're not the bot's creator."))
-    global stklvl,curr,gd
+    global stklvl,curr,gd,tit,contt
     if args[0]=="cd":
         if args[1]=="..":
             if stklvl==0:
@@ -767,9 +922,23 @@ async def cmd(message,*args):
         return await message.channel.send(embed=pingembed)
     elif args[0]=="send":
         if stklvl==2:
-            await curr.send(" ".join(args[1:]))
+            if args[1]=="embed":
+                messembed = discord.Embed(title=tit , description=contt, color=discord.Color.green())
+                await curr.send(embed=messembed)
+            else:
+                await curr.send(" ".join(args[1:]))
         else:
             return await message.channel.send(embed=err("Not in channel"))
+    elif args[0]=="title":
+        if (len(args)<2):
+            return await message.channel.send(embed=err("Not enough parameters"))
+        else:
+            tit=" ".join(args[1:])
+    elif args[0]=="content":
+        if (len(args)<2):
+            return await message.channel.send(embed=err("Not enough parameters"))
+        else:
+            contt=" ".join(args[1:])
     else:
         return await message.channel.send(embed=err("Wrong command"))
 
@@ -813,6 +982,7 @@ async def help(message,*content):
         helpembed = discord.Embed(title="Math commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=clr)
         helpembed.add_field(name="%calc", value="```usage: %calc {expression}\nfunction: calculate {expression}\nIMPORTANT: float and non positive numbers not supported```", inline=False)
         helpembed.add_field(name="%tnpo", value="```usage: %tnpo {value}\nfunction: 3n+1 problem starting at {value}```", inline=False)
+        helpembed.add_field(name="%quad", value="```usage: %quad {expression}\nfunction: shows information of quardratic formula {expression}```", inline=False)
     elif content[0]=="taco" or content[0]=="🌮":
         helpembed = discord.Embed(title="Tacoyaki commands help", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", description='Raibotite commands help', color=clr)
         helpembed.add_field(name="%taco build", value="```usage: %taco build {row} {column}\nfunction: build a board with size {row}*{column}\nIMPORTANT: use build command before using other tacoyaki commands```", inline=False)
@@ -865,7 +1035,7 @@ async def on_message(message):
     if message.channel.id==682168643596976226 and message.content[0]=="%":
         pingembed = discord.Embed(title="Dont use raibotite here" , description='READ ANNOUNCEMENT\n> Since @raigonite ‘s @Raibotite is so useless it is now banned in #bot-commands and must be used in #spam ', color=discord.Color.orange())
         return await message.channel.send(embed=pingembed)
-    if message.content[0]=="%" and "@" in message.content:
+    if message.content[0]=="%" and "@" in message.content and message.author.id!=640864059763326976:
         pingembed = discord.Embed(title="Commands with ping is currently disabled." , description='Your command is blocked because "@" is detected', color=discord.Color.orange())
         return await message.channel.send(embed=pingembed)
     lst=message.content.split()
@@ -976,5 +1146,34 @@ numbers larger than 1e1500 uses scientific notation
 1.3.5 small update
 Improved commands:
 detects ghost ping
+
+1.3.6 small update
+New commands:
+%countdown
+Improved commands:
+author can ping people and exceed spam limit
+cmd cand send embed
+
+1.3.6.1 bug fix
+New commands:
+%taco clear
+Improved commands:
+taco and ions error now have a space
+
+1.3.6.2 bug fix
+Improved commands:
+taco board max 3600 elements to avoid http error
+
+1.3.7 %calc command update
+Improved commands:
+fixed where non positive numbers will cause scientific expression to error
+fixed where 0 can not be a number in expression
+fixed 0^0
+
+1.4 meth update 8/10/2021
+New commands:
+%quad
+Improved commands:
+fixed where empty taco board causes error
 ---github version split---
 '''
